@@ -8,6 +8,7 @@ import { DiscoveryPage } from '@/features/discovery/DiscoveryPage'
 import { DiscoveryDetailPage } from '@/features/discovery/DiscoveryDetailPage'
 import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
 import { ProvisioningDetailPage } from '@/features/provisioning/ProvisioningDetailPage'
+import { DashboardPage } from '@/features/dashboard/DashboardPage'
 
 export default function App() {
   return (
@@ -16,7 +17,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route index element={<div className="p-6">Lite-NMS Dashboard (Plan 2)</div>} />
+          <Route index element={<DashboardPage />} />
           <Route path="/credentials" element={<CredentialsPage />} />
           <Route path="/discovery" element={<DiscoveryPage />} />
           <Route path="/discovery/:id" element={<DiscoveryDetailPage />} />
