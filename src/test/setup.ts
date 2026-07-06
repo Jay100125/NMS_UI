@@ -11,6 +11,14 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   }
 }
 
+// jsdom has no CSS.supports; Highcharts feature-detects with it at load time.
+if (typeof globalThis.CSS === 'undefined') {
+  // @ts-expect-error - minimal stub, only `supports` is exercised by Highcharts
+  globalThis.CSS = { supports: () => false }
+} else if (typeof globalThis.CSS.supports !== 'function') {
+  globalThis.CSS.supports = () => false
+}
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())

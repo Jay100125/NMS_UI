@@ -2,6 +2,8 @@ import { useParams } from 'react-router-dom'
 import { Loading, ErrorState, EmptyState } from '@/components/states'
 import { useJobDetail } from './useJobDetail'
 import { MetricConfigPanel } from './MetricConfigPanel'
+import { MetricCharts } from './MetricCharts'
+import { AvailabilityPanel } from './AvailabilityPanel'
 
 export function ProvisioningDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,11 +24,13 @@ export function ProvisioningDetailPage() {
 
             <MetricConfigPanel job={job.data} />
 
-            {/* Task 8: polled-data charts go here */}
-            <div className="mt-6" />
+            <div className="mt-6">
+              <MetricCharts jobId={jobId} />
+            </div>
 
-            {/* Task 8: availability (device up/down state + uptime %) goes here */}
-            <div className="mt-6" />
+            <div className="mt-6">
+              <AvailabilityPanel jobId={jobId} />
+            </div>
           </>
         )}
     </div>
