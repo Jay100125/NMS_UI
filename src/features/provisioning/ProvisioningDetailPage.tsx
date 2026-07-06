@@ -22,7 +22,7 @@ export function ProvisioningDetailPage() {
               <p className="text-sm text-muted-foreground">{job.data.ip}:{job.data.port}</p>
             </div>
 
-            <MetricConfigPanel job={job.data} />
+            <MetricConfigPanel key={job.data.id} job={job.data} />
 
             <div className="mt-6">
               <MetricCharts jobId={jobId} />

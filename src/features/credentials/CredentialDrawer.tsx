@@ -15,12 +15,26 @@ const TYPES: SystemType[] = ['LINUX', 'SNMP', 'WINRM']
 
 // On create, user/password are required. On edit, they may be left blank to
 // keep the existing cred_data (password is write-only and never prefilled).
+// If exactly one of user/password is filled on edit, that's invalid — changing
+// credentials is all-or-nothing so we never overwrite one half with ''.
 function makeSchema(isEditing: boolean) {
-  return z.object({
+  const base = z.object({
     credential_name: z.string().min(1, 'Name is required'),
     system_type: z.enum(['LINUX', 'SNMP', 'WINRM']),
     user: isEditing ? z.string() : z.string().min(1, 'User is required'),
     password: isEditing ? z.string() : z.string().min(1, 'Password is required'),
+  })
+  if (!isEditing) return base
+  return base.superRefine((v, ctx) => {
+    const userFilled = v.user.length > 0
+    const passwordFilled = v.password.length > 0
+    if (userFilled !== passwordFilled) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['password'],
+        message: 'Enter both user and password to change credentials',
+      })
+    }
   })
 }
 type Form = z.infer<ReturnType<typeof makeSchema>>
