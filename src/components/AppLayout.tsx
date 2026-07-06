@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 const links = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/credentials', label: 'Credentials' },
+  { to: '/discovery', label: 'Discovery' },
 ]
 
 export function AppLayout() {
