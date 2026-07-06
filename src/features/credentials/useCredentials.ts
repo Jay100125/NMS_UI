@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { listCredentials, createCredential, updateCredential, deleteCredential, type CredentialInput } from '@/api/credentials'
+import { listCredentials, createCredential, updateCredential, deleteCredential, type CredentialInput, type CredentialUpdateInput } from '@/api/credentials'
 
 const KEY = ['credentials'] as const
 
@@ -15,7 +15,7 @@ export function useCreateCredential() {
 export function useUpdateCredential() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (v: { id: number; input: Partial<CredentialInput> }) => updateCredential(v.id, v.input),
+    mutationFn: (v: { id: number; input: CredentialUpdateInput }) => updateCredential(v.id, v.input),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   })
 }

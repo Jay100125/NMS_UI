@@ -1,21 +1,22 @@
+import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { AppLayout } from '@/components/AppLayout'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
-import { CredentialsPage } from '@/features/credentials/CredentialsPage'
-import { DiscoveryPage } from '@/features/discovery/DiscoveryPage'
-import { DiscoveryDetailPage } from '@/features/discovery/DiscoveryDetailPage'
-import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
-import { ProvisioningDetailPage } from '@/features/provisioning/ProvisioningDetailPage'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { Loading } from '@/components/states'
 
-export default function App() {
+const CredentialsPage = lazy(() => import('@/features/credentials/CredentialsPage').then((m) => ({ default: m.CredentialsPage })))
+const DiscoveryPage = lazy(() => import('@/features/discovery/DiscoveryPage').then((m) => ({ default: m.DiscoveryPage })))
+const DiscoveryDetailPage = lazy(() => import('@/features/discovery/DiscoveryDetailPage').then((m) => ({ default: m.DiscoveryDetailPage })))
+const ProvisioningPage = lazy(() => import('@/features/provisioning/ProvisioningPage').then((m) => ({ default: m.ProvisioningPage })))
+const ProvisioningDetailPage = lazy(() => import('@/features/provisioning/ProvisioningDetailPage').then((m) => ({ default: m.ProvisioningDetailPage })))
+const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+
+function SuspendedRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route element={<ProtectedRoute />}>
+    <Suspense fallback={<Loading />}>
+      <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="/credentials" element={<CredentialsPage />} />
@@ -24,6 +25,18 @@ export default function App() {
           <Route path="/provisioning" element={<ProvisioningPage />} />
           <Route path="/provisioning/:id" element={<ProvisioningDetailPage />} />
         </Route>
+      </Routes>
+    </Suspense>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/*" element={<SuspendedRoutes />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,21 +12,35 @@ import { useCreateCredential, useUpdateCredential } from './useCredentials'
 import type { Credential, SystemType } from '@/lib/types'
 
 const TYPES: SystemType[] = ['LINUX', 'SNMP', 'WINRM']
-const schema = z.object({
-  credential_name: z.string().min(1, 'Required'),
-  system_type: z.enum(['LINUX', 'SNMP', 'WINRM']),
-  user: z.string().min(1, 'Required'),
-  password: z.string().min(1, 'Required'),
-})
-type Form = z.infer<typeof schema>
+
+// On create, user/password are required. On edit, they may be left blank to
+// keep the existing cred_data (password is write-only and never prefilled).
+function makeSchema(isEditing: boolean) {
+  return z.object({
+    credential_name: z.string().min(1, 'Name is required'),
+    system_type: z.enum(['LINUX', 'SNMP', 'WINRM']),
+    user: isEditing ? z.string() : z.string().min(1, 'User is required'),
+    password: isEditing ? z.string() : z.string().min(1, 'Password is required'),
+  })
+}
+type Form = z.infer<ReturnType<typeof makeSchema>>
 
 export function CredentialDrawer({ open, onOpenChange, editing }: {
   open: boolean; onOpenChange: (o: boolean) => void; editing: Credential | null
 }) {
   const create = useCreateCredential()
   const update = useUpdateCredential()
+
+  // `editing` can change across renders without remounting this drawer, so the
+  // resolver reads the latest value via a ref rather than one captured at mount.
+  const editingRef = useRef(editing)
+  editingRef.current = editing
+
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } =
-    useForm<Form>({ resolver: zodResolver(schema), defaultValues: { system_type: 'LINUX' } })
+    useForm<Form>({
+      resolver: (values, context, options) => zodResolver(makeSchema(!!editingRef.current))(values, context, options),
+      defaultValues: { system_type: 'LINUX' },
+    })
 
   // Prefill name/type on edit; never prefill the password (write-only).
   useEffect(() => {
@@ -39,10 +53,19 @@ export function CredentialDrawer({ open, onOpenChange, editing }: {
   }, [editing, open, reset])
 
   const onSubmit = (v: Form) => {
-    const payload = { credential_name: v.credential_name, protocol: v.system_type, cred_data: { user: v.user, password: v.password } }
     const done = { onSuccess: () => { toast.success('Saved'); onOpenChange(false) }, onError: (e: unknown) => toast.error((e as Error).message) }
-    if (editing) update.mutate({ id: editing.id, input: payload }, done)
-    else create.mutate(payload, done)
+    if (editing) {
+      // Password is write-only and never prefilled; leaving it blank means
+      // "keep the existing credential" — omit cred_data entirely so the
+      // backend doesn't overwrite it with an empty value.
+      const payload = v.password
+        ? { credential_name: v.credential_name, protocol: v.system_type, cred_data: { user: v.user, password: v.password } }
+        : { credential_name: v.credential_name, protocol: v.system_type }
+      update.mutate({ id: editing.id, input: payload }, done)
+    } else {
+      const payload = { credential_name: v.credential_name, protocol: v.system_type, cred_data: { user: v.user, password: v.password } }
+      create.mutate(payload, done)
+    }
   }
 
   return (

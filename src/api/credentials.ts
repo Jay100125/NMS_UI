@@ -7,8 +7,10 @@ export interface CredentialInput {
   cred_data: { user: string; password: string }
 }
 
+export type CredentialUpdateInput = Omit<CredentialInput, 'cred_data'> & { cred_data?: CredentialInput['cred_data'] }
+
 export const listCredentials = () => unwrap<Credential[]>(api.get('/api/credential'))
 export const createCredential = (input: CredentialInput) => unwrap<unknown[]>(api.post('/api/credential', input))
-export const updateCredential = (id: number, input: Partial<CredentialInput>) =>
+export const updateCredential = (id: number, input: CredentialUpdateInput) =>
   unwrap<unknown[]>(api.patch(`/api/credential/${id}`, input))
 export const deleteCredential = (id: number) => unwrap<unknown[]>(api.delete(`/api/credential/${id}`))

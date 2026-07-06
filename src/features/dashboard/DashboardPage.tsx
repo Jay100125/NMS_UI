@@ -48,7 +48,7 @@ export function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Avg Uptime</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{Math.round(avgUptimePct)}%</CardContent>
+          <CardContent className="text-2xl font-semibold" data-testid="avg-uptime">{formatPct(avgUptimePct)}</CardContent>
         </Card>
       </div>
 

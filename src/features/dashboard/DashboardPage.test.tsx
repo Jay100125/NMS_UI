@@ -19,5 +19,6 @@ test('shows a device count and its up/down state', async () => {
     </QueryClientProvider>,
   )
   await waitFor(() => expect(screen.getByText('10.0.0.1')).toBeInTheDocument())
-  expect(screen.getByText(/90.0%/)).toBeInTheDocument()
+  expect(screen.getByTestId('avg-uptime')).toHaveTextContent('90.0%')
+  expect(screen.getByRole('cell', { name: '90.0%' })).toBeInTheDocument()
 })
