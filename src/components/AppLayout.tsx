@@ -6,6 +6,7 @@ const links = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/credentials', label: 'Credentials' },
   { to: '/discovery', label: 'Discovery' },
+  { to: '/provisioning', label: 'Provisioning' },
 ]
 
 export function AppLayout() {

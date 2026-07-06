@@ -6,6 +6,7 @@ import { RegisterPage } from '@/features/auth/RegisterPage'
 import { CredentialsPage } from '@/features/credentials/CredentialsPage'
 import { DiscoveryPage } from '@/features/discovery/DiscoveryPage'
 import { DiscoveryDetailPage } from '@/features/discovery/DiscoveryDetailPage'
+import { ProvisioningPage } from '@/features/provisioning/ProvisioningPage'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/credentials" element={<CredentialsPage />} />
           <Route path="/discovery" element={<DiscoveryPage />} />
           <Route path="/discovery/:id" element={<DiscoveryDetailPage />} />
+          <Route path="/provisioning" element={<ProvisioningPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
