@@ -6,11 +6,11 @@ export function DataTable<T>({ columns, rows, rowKey }: { columns: Column<T>[]; 
   return (
     <Table>
       <TableHeader>
-        <TableRow>{columns.map((c) => <TableHead key={c.header}>{c.header}</TableHead>)}</TableRow>
+        <TableRow>{columns.map((c, i) => <TableHead key={i}>{c.header}</TableHead>)}</TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((row) => (
-          <TableRow key={rowKey(row)}>{columns.map((c) => <TableCell key={c.header}>{c.cell(row)}</TableCell>)}</TableRow>
+          <TableRow key={rowKey(row)}>{columns.map((c, i) => <TableCell key={i}>{c.cell(row)}</TableCell>)}</TableRow>
         ))}
       </TableBody>
     </Table>

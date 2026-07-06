@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DataTable, type Column } from '@/components/DataTable'
@@ -20,7 +21,7 @@ export function CredentialsPage() {
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" onClick={() => { setEditing(r); setOpen(true) }}>Edit</Button>
         <Button variant="ghost" size="sm" className="text-red-600"
-          onClick={() => { if (confirm(`Delete ${r.credential_name}?`)) del.mutate(r.id) }}>Delete</Button>
+          onClick={() => { if (confirm(`Delete ${r.credential_name}?`)) del.mutate(r.id, { onError: (e) => toast.error((e as Error).message) }) }}>Delete</Button>
       </div>
     ) },
   ]

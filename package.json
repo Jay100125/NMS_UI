@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc -b --noEmit",
+    "lint": "oxlint && tsc -b --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
