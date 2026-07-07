@@ -15,7 +15,7 @@ export interface ApiEnvelope<T> {
   result?: T
 }
 
-export interface Discovery { id: number; discovery_profile_name: string; ip: string; port: number; status: 'PENDING'|'RUNNING'|'COMPLETED'|'FAILED'; credential_profile_ids: number[] }
+export interface Discovery { id: number; discovery_profile_name: string; ip: string; port: number; plugin_type: SystemType; status: 'PENDING'|'RUNNING'|'COMPLETED'|'FAILED'; credential_profile_ids: number[] }
 export interface DiscoveryResult { id: number; discovery_id: number; ip: string; port: number; msg: string | null; credential_profile_id: number | null; result: 'COMPLETED'|'FAILED' }
 export interface ProvisioningJob { id: number; ip: string; port: number; credential_profile_id?: number; plugin_type?: SystemType; credential_name?: string; system_type?: SystemType }
 export interface JobMetric { metric_name: string; polling_interval: number; is_enabled: boolean }

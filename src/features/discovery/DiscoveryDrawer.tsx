@@ -45,6 +45,7 @@ export function DiscoveryDrawer({ open, onOpenChange, editing }: {
       ip: v.ip,
       port: v.port,
       credential_profile_ids: v.credential_profile_ids,
+      plugin_type: 'LINUX' as const,
     }
     const done = { onSuccess: () => { toast.success('Saved'); onOpenChange(false) }, onError: (e: unknown) => toast.error((e as Error).message) }
     if (editing) update.mutate({ id: editing.id, input: payload }, done)

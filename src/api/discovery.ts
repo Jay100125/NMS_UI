@@ -1,11 +1,12 @@
 import { api, unwrap } from './client'
-import type { Discovery, DiscoveryResult } from '@/lib/types'
+import type { Discovery, DiscoveryResult, SystemType } from '@/lib/types'
 
 export interface DiscoveryInput {
   discovery_profile_name: string
   ip: string
   port: number
   credential_profile_ids: number[]
+  plugin_type: SystemType
 }
 
 // Backend write shape uses the dotted `ip.address` key and `credential_profile_id` as an array.
@@ -15,6 +16,7 @@ function toWire(input: DiscoveryInput) {
     'ip.address': input.ip,
     port: input.port,
     credential_profile_id: input.credential_profile_ids,
+    plugin_type: input.plugin_type,
   }
 }
 
