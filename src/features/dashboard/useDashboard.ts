@@ -26,9 +26,6 @@ export function useDashboard() {
   const withAvailability = availabilityByJob.filter((a) => a.availability !== null)
   const devicesUp = withAvailability.filter((a) => a.availability!.is_up).length
   const devicesDown = withAvailability.filter((a) => !a.availability!.is_up).length
-  const avgUptimePct = withAvailability.length === 0
-    ? 0
-    : withAvailability.reduce((sum, a) => sum + a.availability!.availability_pct, 0) / withAvailability.length
 
   return {
     jobs,
@@ -40,6 +37,5 @@ export function useDashboard() {
     totalJobs,
     devicesUp,
     devicesDown,
-    avgUptimePct,
   }
 }
