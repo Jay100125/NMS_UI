@@ -13,8 +13,16 @@ export function useDiscoveryProgress(id: number) {
   const [state, dispatch] = useReducer(reduceProgress, initialProgress)
   const [live, setLive] = useState(false)
 
-  const detail = useDiscoveryDetail(id)
+  // isActive normally needs detail.data (to catch a run still RUNNING server-side
+  // even before any live event arrives), but detail's own refetchInterval needs
+  // isActive — a chicken-and-egg problem within the same render. We break the
+  // cycle by driving the poll off the *previous* render's isActive; the interval
+  // simply starts one render later, once detail has first loaded, which is fine
+  // since detail.data is undefined (and polling therefore moot) until then.
+  const isActiveRef = useRef(false)
+  const detail = useDiscoveryDetail(id, { refetchInterval: isActiveRef.current ? 3000 : false })
   const isActive = state.runState === 'RUNNING' || detail.data?.status === 'RUNNING'
+  isActiveRef.current = isActive
   const results = useDiscoveryResults(id, isActive)
 
   // Seed / fallback-merge whenever persisted data changes.

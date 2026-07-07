@@ -37,6 +37,24 @@ describe('reduceProgress', () => {
     expect(s.rows['10.0.0.5'].status).toBe('completed')
   })
 
+  it('does not un-fail a failed IP on a later non-terminal event (e.g. a stray PING)', () => {
+    const s = apply([
+      { type: 'targets', total: 1, ips: ['10.0.0.6'] },
+      { type: 'progress', ip: '10.0.0.6', stage: 'PING', progress: 33.33, status: 'failed', message: 'ping failed' },
+      { type: 'progress', ip: '10.0.0.6', stage: 'PING', progress: 33.33, status: 'ok' },
+    ])
+    expect(s.rows['10.0.0.6']).toMatchObject({ status: 'failed', message: 'ping failed' })
+  })
+
+  it('does allow a failed IP to be upgraded to completed by a later credential', () => {
+    const s = apply([
+      { type: 'targets', total: 1, ips: ['10.0.0.7'] },
+      { type: 'progress', ip: '10.0.0.7', stage: 'PLUGIN', progress: 100, status: 'FAILED', message: 'auth failed (cred A)' },
+      { type: 'progress', ip: '10.0.0.7', stage: 'PLUGIN', progress: 100, status: 'COMPLETED' },
+    ])
+    expect(s.rows['10.0.0.7']).toMatchObject({ status: 'completed' })
+  })
+
   it('records completion state', () => {
     const s = apply([{ type: 'state', status: 'COMPLETED' }])
     expect(s.runState).toBe('COMPLETED')

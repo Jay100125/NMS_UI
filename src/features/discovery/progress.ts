@@ -47,12 +47,18 @@ export function reduceProgress(state: ProgressState, event: unknown): ProgressSt
 
   if (e.type === 'progress' && typeof e.ip === 'string' && Number.isFinite(e.progress)) {
     const current = state.rows[e.ip]
-    // COMPLETED wins: a later failed credential attempt must not downgrade the row.
-    if (current && current.status === 'completed') return state
     const status: ProgressRow['status'] =
       e.status === 'COMPLETED' ? 'completed'
       : e.status === 'FAILED' || e.status === 'failed' ? 'failed'
       : 'ok'
+    if (current) {
+      // COMPLETED wins outright: nothing downgrades a completed row.
+      if (current.status === 'completed') return state
+      // A failed row may only be upgraded to completed (multi-credential discovery:
+      // credential B succeeding after credential A failed) — a stray non-terminal
+      // event (e.g. a later PING) must not un-fail it.
+      if (current.status === 'failed' && status !== 'completed') return state
+    }
     const row: ProgressRow = {
       ip: e.ip,
       stage: (e.stage as ProgressRow['stage']) ?? null,
