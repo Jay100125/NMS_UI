@@ -9,7 +9,7 @@ import { DiscoveryPage } from './DiscoveryPage'
 test('lists discovery profiles with status', async () => {
   server.use(http.get('*/api/discovery', () =>
     HttpResponse.json({ 'status.code': 200, status: 'success', result: [
-      { id: 1, discovery_profile_name: 'lab', ip: '10.0.0.1', port: 22, status: 'COMPLETED', credential_profile_ids: [3] },
+      { id: 1, discovery_profile_name: 'lab', ip: '10.0.0.1', port: 22, plugin_type: 'LINUX', status: 'COMPLETED', credential_profile_ids: [3] },
     ] })))
   render(
     <QueryClientProvider client={makeQueryClient(false)}>
@@ -18,4 +18,5 @@ test('lists discovery profiles with status', async () => {
   )
   await waitFor(() => expect(screen.getByText('lab')).toBeInTheDocument())
   expect(screen.getByText('COMPLETED')).toBeInTheDocument()
+  expect(screen.getByText('LINUX')).toBeInTheDocument()
 })
