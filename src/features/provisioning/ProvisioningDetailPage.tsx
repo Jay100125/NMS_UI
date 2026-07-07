@@ -3,6 +3,7 @@ import { Loading, ErrorState, EmptyState } from '@/components/states'
 import { useJobDetail } from './useJobDetail'
 import { MetricConfigPanel } from './MetricConfigPanel'
 import { MetricCharts } from './MetricCharts'
+import { PolledDataGrid } from './PolledDataGrid'
 import { AvailabilityPanel } from './AvailabilityPanel'
 
 export function ProvisioningDetailPage() {
@@ -26,6 +27,10 @@ export function ProvisioningDetailPage() {
 
             <div className="mt-6">
               <MetricCharts jobId={jobId} />
+            </div>
+
+            <div className="mt-6">
+              <PolledDataGrid jobId={jobId} />
             </div>
 
             <div className="mt-6">
