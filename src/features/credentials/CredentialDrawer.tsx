@@ -13,28 +13,32 @@ import type { Credential, SystemType } from '@/lib/types'
 
 const TYPES: SystemType[] = ['LINUX', 'SNMP', 'WINRM']
 
-// On create, user/password are required. On edit, they may be left blank to
-// keep the existing cred_data (password is write-only and never prefilled).
-// If exactly one of user/password is filled on edit, that's invalid — changing
-// credentials is all-or-nothing so we never overwrite one half with ''.
-function makeSchema(isEditing: boolean) {
+// On create, user/password (or, for SNMP, community) are required. On edit,
+// they may be left blank to keep the existing cred_data (password is
+// write-only and never prefilled). If exactly one of user/password is filled
+// on edit, that's invalid — changing credentials is all-or-nothing so we
+// never overwrite one half with ''.
+function makeSchema(isEditing: boolean, systemType: SystemType) {
   const base = z.object({
     credential_name: z.string().min(1, 'Name is required'),
     system_type: z.enum(['LINUX', 'SNMP', 'WINRM']),
-    user: isEditing ? z.string() : z.string().min(1, 'User is required'),
-    password: isEditing ? z.string() : z.string().min(1, 'Password is required'),
+    user: z.string(),
+    password: z.string(),
+    community: z.string(),
   })
-  if (!isEditing) return base
   return base.superRefine((v, ctx) => {
-    const userFilled = v.user.length > 0
-    const passwordFilled = v.password.length > 0
-    if (userFilled !== passwordFilled) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['password'],
-        message: 'Enter both user and password to change credentials',
-      })
+    if (systemType === 'SNMP') {
+      if (!isEditing && v.community.length === 0)
+        ctx.addIssue({ code: 'custom', path: ['community'], message: 'Community is required' })
+      return
     }
+    if (!isEditing) {
+      if (v.user.length === 0) ctx.addIssue({ code: 'custom', path: ['user'], message: 'User is required' })
+      if (v.password.length === 0) ctx.addIssue({ code: 'custom', path: ['password'], message: 'Password is required' })
+      return
+    }
+    if ((v.user.length > 0) !== (v.password.length > 0))
+      ctx.addIssue({ code: 'custom', path: ['password'], message: 'Enter both user and password to change credentials' })
   })
 }
 type Form = z.infer<ReturnType<typeof makeSchema>>
@@ -52,9 +56,12 @@ export function CredentialDrawer({ open, onOpenChange, editing }: {
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } =
     useForm<Form>({
-      resolver: (values, context, options) => zodResolver(makeSchema(!!editingRef.current))(values, context, options),
+      resolver: (values, context, options) =>
+        zodResolver(makeSchema(!!editingRef.current, values.system_type as SystemType))(values, context, options),
       defaultValues: { system_type: 'LINUX' },
     })
+
+  const systemType = watch('system_type')
 
   // Prefill name/type on edit; never prefill the password (write-only).
   useEffect(() => {
@@ -63,22 +70,26 @@ export function CredentialDrawer({ open, onOpenChange, editing }: {
       system_type: (editing?.system_type as SystemType) ?? 'LINUX',
       user: '',
       password: '',
+      community: '',
     })
   }, [editing, open, reset])
 
   const onSubmit = (v: Form) => {
     const done = { onSuccess: () => { toast.success('Saved'); onOpenChange(false) }, onError: (e: unknown) => toast.error((e as Error).message) }
+    // Password/community are write-only and never prefilled; leaving them
+    // blank on edit means "keep the existing credential" — omit cred_data
+    // entirely so the backend doesn't overwrite it with an empty value.
+    const credData = v.system_type === 'SNMP'
+      ? (v.community ? { community: v.community } : null)
+      : (v.password ? { user: v.user, password: v.password } : null)
     if (editing) {
-      // Password is write-only and never prefilled; leaving it blank means
-      // "keep the existing credential" — omit cred_data entirely so the
-      // backend doesn't overwrite it with an empty value.
-      const payload = v.password
-        ? { credential_name: v.credential_name, protocol: v.system_type, cred_data: { user: v.user, password: v.password } }
+      const payload = credData
+        ? { credential_name: v.credential_name, protocol: v.system_type, cred_data: credData }
         : { credential_name: v.credential_name, protocol: v.system_type }
       update.mutate({ id: editing.id, input: payload }, done)
     } else {
-      const payload = { credential_name: v.credential_name, protocol: v.system_type, cred_data: { user: v.user, password: v.password } }
-      create.mutate(payload, done)
+      // The schema guarantees credData is non-null on create.
+      create.mutate({ credential_name: v.credential_name, protocol: v.system_type, cred_data: credData! }, done)
     }
   }
 
@@ -96,10 +107,17 @@ export function CredentialDrawer({ open, onOpenChange, editing }: {
               <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div><Label htmlFor="user">User</Label><Input id="user" {...register('user')} />
-            {errors.user && <p className="text-xs text-red-600">{errors.user.message}</p>}</div>
-          <div><Label htmlFor="password">Password</Label><Input id="password" type="password" {...register('password')} />
-            {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}</div>
+          {systemType === 'SNMP' ? (
+            <div><Label htmlFor="community">Community</Label><Input id="community" {...register('community')} />
+              {errors.community && <p className="text-xs text-red-600">{errors.community.message}</p>}</div>
+          ) : (
+            <>
+              <div><Label htmlFor="user">User</Label><Input id="user" {...register('user')} />
+                {errors.user && <p className="text-xs text-red-600">{errors.user.message}</p>}</div>
+              <div><Label htmlFor="password">Password</Label><Input id="password" type="password" {...register('password')} />
+                {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}</div>
+            </>
+          )}
           <Button type="submit" className="w-full" disabled={create.isPending || update.isPending}>Save</Button>
         </form>
       </SheetContent>

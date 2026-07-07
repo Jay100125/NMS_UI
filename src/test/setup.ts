@@ -11,6 +11,21 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   }
 }
 
+// jsdom has no pointer capture APIs or scrollIntoView; Radix Select (used by
+// the credential type picker) calls these during pointer-driven interaction.
+if (typeof Element.prototype.hasPointerCapture !== 'function') {
+  Element.prototype.hasPointerCapture = () => false
+}
+if (typeof Element.prototype.setPointerCapture !== 'function') {
+  Element.prototype.setPointerCapture = () => {}
+}
+if (typeof Element.prototype.releasePointerCapture !== 'function') {
+  Element.prototype.releasePointerCapture = () => {}
+}
+if (typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = () => {}
+}
+
 // jsdom has no CSS.supports; Highcharts feature-detects with it at load time.
 if (typeof globalThis.CSS === 'undefined') {
   // @ts-expect-error - minimal stub, only `supports` is exercised by Highcharts
