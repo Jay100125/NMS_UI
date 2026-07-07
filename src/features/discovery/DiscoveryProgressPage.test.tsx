@@ -19,9 +19,9 @@ vi.mock('@/lib/eventbus', () => ({
 
 const ok = (result: unknown) => HttpResponse.json({ 'status.code': 200, status: 'success', result })
 
-function renderAt(path: string) {
+function renderAt(path: string, qc = makeQueryClient(false)) {
   return render(
-    <QueryClientProvider client={makeQueryClient(false)}>
+    <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route path="/discovery/:id/progress" element={<DiscoveryProgressPage />} />
@@ -66,4 +66,39 @@ test('shows the degraded indicator when the socket is down', async () => {
   pushStatus(false)
 
   expect(await screen.findByText(/live updates unavailable/i)).toBeInTheDocument()
+})
+
+// Regression: re-running a previously COMPLETED profile navigates here while
+// TanStack Query still holds the old COMPLETED detail + terminal results in
+// cache. Seeding from that stale, synchronously-served snapshot must not mark
+// runState COMPLETED and bounce straight back to /result — the page must wait
+// for a post-mount fetch (here returning RUNNING + no results yet) before it
+// trusts the seed.
+test('re-running a completed profile does not bounce to the result page from stale cache', async () => {
+  const qc = makeQueryClient(false)
+  qc.setQueryData(['discovery', 3], {
+    id: 3, discovery_profile_name: 'lab', ip: '10.0.0.0/24', port: 22, status: 'COMPLETED', credential_profile_ids: [1],
+  })
+  qc.setQueryData(['discovery-results', 3], [
+    { id: 9, discovery_id: 3, ip: '10.0.0.1', port: 22, msg: 'ok', credential_profile_id: 1, result: 'COMPLETED' },
+  ])
+
+  server.use(
+    http.get('*/api/discovery/3', () => ok([
+      { id: 3, discovery_profile_name: 'lab', ip: '10.0.0.0/24', port: 22, status: 'RUNNING', credential_profile_ids: [1] },
+    ])),
+    http.get('*/api/discovery/3/result', () => ok([])),
+  )
+
+  renderAt('/discovery/3/progress', qc)
+
+  // The fresh RUNNING status lands and the page keeps showing progress (empty
+  // targets so far) rather than ever bouncing to the result page.
+  await screen.findByText(/waiting for targets/i)
+  expect(screen.queryByTestId('result-page-marker')).not.toBeInTheDocument()
+
+  // Give any stray async work a moment to settle and re-assert — a bounce
+  // triggered by the stale seed would have already fired well before this.
+  await new Promise((r) => setTimeout(r, 50))
+  expect(screen.queryByTestId('result-page-marker')).not.toBeInTheDocument()
 })

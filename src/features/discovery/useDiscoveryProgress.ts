@@ -29,9 +29,17 @@ export function useDiscoveryProgress(id: number) {
   const seedRef = useRef<(r: Parameters<typeof seedFromResults>[1], s: string) => void>(() => {})
   seedRef.current = (r, s) => dispatch({ __seed: { results: r, status: s } } as never)
 
+  // Only seed from data that was actually (re)fetched after this page mounted —
+  // not from a synchronously-served stale cache entry. Re-running a previously
+  // COMPLETED profile navigates here while TanStack Query still holds the old
+  // COMPLETED detail + terminal results; seeding from that snapshot would mark
+  // runState COMPLETED immediately and the auto-navigate effect would bounce
+  // straight back to /result before the fresh RUNNING status ever loads.
   useEffect(() => {
-    if (results.data && detail.data) seedRef.current(results.data, detail.data.status)
-  }, [results.data, detail.data])
+    if (results.data && detail.data && results.isFetchedAfterMount && detail.isFetchedAfterMount) {
+      seedRef.current(results.data, detail.data.status)
+    }
+  }, [results.data, detail.data, results.isFetchedAfterMount, detail.isFetchedAfterMount])
 
   useEffect(() => {
     if (!Number.isFinite(id)) return

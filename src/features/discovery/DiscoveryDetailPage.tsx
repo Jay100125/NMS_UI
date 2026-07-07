@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loading, ErrorState, EmptyState } from '@/components/states'
 import { useDiscoveryDetail } from './useDiscoveryDetail'
 import { useRunDiscovery } from './useDiscovery'
+import type { Discovery } from '@/lib/types'
 
 export function DiscoveryDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -37,6 +38,11 @@ export function DiscoveryDetailPage() {
                 disabled={isRunning}
                 onClick={() => run.mutate(discoveryId, {
                   onSuccess: () => {
+                    // Belt and suspenders: optimistically flip the cached status to
+                    // RUNNING so the progress page's isActive is true from its very
+                    // first render, ahead of whatever the invalidated refetch returns.
+                    qc.setQueryData(['discovery', discoveryId], (old: Discovery | undefined) =>
+                      old ? { ...old, status: 'RUNNING' } : old)
                     qc.invalidateQueries({ queryKey: ['discovery', discoveryId] })
                     navigate(`/discovery/${discoveryId}/progress`)
                   },
