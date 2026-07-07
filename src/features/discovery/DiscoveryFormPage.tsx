@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loading } from '@/components/states'
+import { Loading, ErrorState } from '@/components/states'
 import { useCredentials } from '@/features/credentials/useCredentials'
 import { useCreateDiscovery, useUpdateDiscovery } from './useDiscovery'
 import { useDiscoveryDetail } from './useDiscoveryDetail'
@@ -88,6 +88,7 @@ export function DiscoveryFormPage() {
   }
 
   if (editingId !== null && detail.isLoading) return <Loading />
+  if (editingId !== null && detail.isError) return <ErrorState message={(detail.error as Error).message} onRetry={() => detail.refetch()} />
 
   return (
     <div className="mx-auto max-w-2xl p-6">

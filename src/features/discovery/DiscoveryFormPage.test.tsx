@@ -148,3 +148,14 @@ test('prefills a CIDR profile without blanking the target type on edit', async (
     plugin_type: 'LINUX',
   }))
 })
+
+test('shows an error state with retry when the edit-mode detail fetch fails', async () => {
+  server.use(http.get('*/api/discovery/9', () => HttpResponse.json({}, { status: 500 })))
+
+  renderAt('/discovery/9/edit')
+
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
+  // No blank form rendered underneath the error.
+  expect(screen.queryByLabelText('Name')).not.toBeInTheDocument()
+})
