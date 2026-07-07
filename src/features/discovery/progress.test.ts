@@ -45,6 +45,24 @@ describe('reduceProgress', () => {
   it('ignores malformed events', () => {
     expect(apply([null, 42, { type: 'bogus' }])).toEqual(initialProgress)
   })
+
+  it('ignores a state event with an unrecognized status', () => {
+    const s = apply([{ type: 'state', status: 'PENDING' }])
+    expect(s).toEqual(initialProgress)
+  })
+
+  it('ignores a progress event with a non-finite progress value', () => {
+    const s = apply([
+      { type: 'targets', total: 1, ips: ['10.0.0.1'] },
+      { type: 'progress', ip: '10.0.0.1', stage: 'PING', progress: NaN, status: 'ok' },
+    ])
+    expect(s.rows['10.0.0.1']).toMatchObject({ stage: null, progress: 0, status: 'pending' })
+  })
+
+  it('skips non-string ips in a targets event', () => {
+    const s = apply([{ type: 'targets', total: 3, ips: ['10.0.0.1', 42, null] }])
+    expect(Object.keys(s.rows)).toEqual(['10.0.0.1'])
+  })
 })
 
 describe('seedFromResults', () => {

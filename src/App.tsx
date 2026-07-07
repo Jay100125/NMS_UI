@@ -10,6 +10,7 @@ const CredentialsPage = lazy(() => import('@/features/credentials/CredentialsPag
 const DiscoveryPage = lazy(() => import('@/features/discovery/DiscoveryPage').then((m) => ({ default: m.DiscoveryPage })))
 const DiscoveryDetailPage = lazy(() => import('@/features/discovery/DiscoveryDetailPage').then((m) => ({ default: m.DiscoveryDetailPage })))
 const DiscoveryFormPage = lazy(() => import('@/features/discovery/DiscoveryFormPage').then((m) => ({ default: m.DiscoveryFormPage })))
+const DiscoveryProgressPage = lazy(() => import('@/features/discovery/DiscoveryProgressPage').then((m) => ({ default: m.DiscoveryProgressPage })))
 const ProvisioningPage = lazy(() => import('@/features/provisioning/ProvisioningPage').then((m) => ({ default: m.ProvisioningPage })))
 const ProvisioningDetailPage = lazy(() => import('@/features/provisioning/ProvisioningDetailPage').then((m) => ({ default: m.ProvisioningDetailPage })))
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })))
@@ -24,6 +25,8 @@ function SuspendedRoutes() {
           <Route path="/discovery" element={<DiscoveryPage />} />
           <Route path="/discovery/new" element={<DiscoveryFormPage />} />
           <Route path="/discovery/:id/edit" element={<DiscoveryFormPage />} />
+          <Route path="/discovery/:id/progress" element={<DiscoveryProgressPage />} />
+          <Route path="/discovery/:id/result" element={<DiscoveryDetailPage />} />
           <Route path="/discovery/:id" element={<DiscoveryDetailPage />} />
           <Route path="/provisioning" element={<ProvisioningPage />} />
           <Route path="/provisioning/:id" element={<ProvisioningDetailPage />} />

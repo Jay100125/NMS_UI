@@ -20,25 +20,32 @@ function isTerminal(row: ProgressRow): boolean {
   return row.status === 'completed' || row.status === 'failed'
 }
 
+const RUN_STATUSES = new Set(['RUNNING', 'COMPLETED', 'FAILED'])
+
 /** Applies one bridge event ({type: state|targets|progress}); unknown shapes are ignored. */
 export function reduceProgress(state: ProgressState, event: unknown): ProgressState {
   if (typeof event !== 'object' || event === null) return state
   const e = event as Record<string, unknown>
 
-  if (e.type === 'state' && typeof e.status === 'string') {
+  const seed = (event as { __seed?: { results: DiscoveryResult[]; status: string } } | null)?.__seed
+  if (seed) return seedFromResults(state, seed.results, seed.status)
+
+  if (e.type === 'state') {
+    if (typeof e.status !== 'string' || !RUN_STATUSES.has(e.status)) return state
     return { ...state, runState: e.status as ProgressState['runState'], runMessage: e.message as string | undefined }
   }
 
   if (e.type === 'targets' && Array.isArray(e.ips)) {
     const rows = { ...state.rows }
-    for (const ip of e.ips as string[]) {
+    for (const ip of e.ips as unknown[]) {
+      if (typeof ip !== 'string') continue
       // Seeded terminal rows (page reload) win over the fresh pending row.
       if (!rows[ip]) rows[ip] = { ip, stage: null, progress: 0, status: 'pending' }
     }
     return { ...state, rows }
   }
 
-  if (e.type === 'progress' && typeof e.ip === 'string' && typeof e.progress === 'number') {
+  if (e.type === 'progress' && typeof e.ip === 'string' && Number.isFinite(e.progress)) {
     const current = state.rows[e.ip]
     // COMPLETED wins: a later failed credential attempt must not downgrade the row.
     if (current && current.status === 'completed') return state
@@ -49,7 +56,7 @@ export function reduceProgress(state: ProgressState, event: unknown): ProgressSt
     const row: ProgressRow = {
       ip: e.ip,
       stage: (e.stage as ProgressRow['stage']) ?? null,
-      progress: e.progress,
+      progress: e.progress as number,
       status,
       message: e.message as string | undefined,
     }
