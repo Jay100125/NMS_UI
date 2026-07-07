@@ -18,7 +18,11 @@ const TYPES: SystemType[] = ['LINUX', 'SNMP', 'WINRM']
 // write-only and never prefilled). If exactly one of user/password is filled
 // on edit, that's invalid — changing credentials is all-or-nothing so we
 // never overwrite one half with ''.
-function makeSchema(isEditing: boolean, systemType: SystemType) {
+// The "blank = keep existing" escape hatch only applies when the credential's
+// type hasn't changed: the persisted cred_data is shaped for the OLD type, so
+// switching type must force fresh fields for the new type (otherwise we'd
+// overwrite system_type while keeping wrongly-shaped encrypted cred_data).
+function makeSchema(isEditing: boolean, systemType: SystemType, typeChanged: boolean) {
   const base = z.object({
     credential_name: z.string().min(1, 'Name is required'),
     system_type: z.enum(['LINUX', 'SNMP', 'WINRM']),
@@ -26,13 +30,14 @@ function makeSchema(isEditing: boolean, systemType: SystemType) {
     password: z.string(),
     community: z.string(),
   })
+  const fieldsRequired = !isEditing || typeChanged
   return base.superRefine((v, ctx) => {
     if (systemType === 'SNMP') {
-      if (!isEditing && v.community.length === 0)
+      if (fieldsRequired && v.community.length === 0)
         ctx.addIssue({ code: 'custom', path: ['community'], message: 'Community is required' })
       return
     }
-    if (!isEditing) {
+    if (fieldsRequired) {
       if (v.user.length === 0) ctx.addIssue({ code: 'custom', path: ['user'], message: 'User is required' })
       if (v.password.length === 0) ctx.addIssue({ code: 'custom', path: ['password'], message: 'Password is required' })
       return
@@ -56,8 +61,10 @@ export function CredentialDrawer({ open, onOpenChange, editing }: {
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } =
     useForm<Form>({
-      resolver: (values, context, options) =>
-        zodResolver(makeSchema(!!editingRef.current, values.system_type as SystemType))(values, context, options),
+      resolver: (values, context, options) => {
+        const typeChanged = !!editingRef.current && values.system_type !== editingRef.current.system_type
+        return zodResolver(makeSchema(!!editingRef.current, values.system_type as SystemType, typeChanged))(values, context, options)
+      },
       defaultValues: { system_type: 'LINUX' },
     })
 
@@ -78,13 +85,16 @@ export function CredentialDrawer({ open, onOpenChange, editing }: {
     const done = { onSuccess: () => { toast.success('Saved'); onOpenChange(false) }, onError: (e: unknown) => toast.error((e as Error).message) }
     // Password/community are write-only and never prefilled; leaving them
     // blank on edit means "keep the existing credential" — omit cred_data
-    // entirely so the backend doesn't overwrite it with an empty value.
+    // entirely so the backend doesn't overwrite it with an empty value. This
+    // only applies when the type is unchanged: the schema forces fresh fields
+    // whenever type changes, so credData is guaranteed non-null in that case.
     const credData = v.system_type === 'SNMP'
       ? (v.community ? { community: v.community } : null)
       : (v.password ? { user: v.user, password: v.password } : null)
     if (editing) {
-      const payload = credData
-        ? { credential_name: v.credential_name, protocol: v.system_type, cred_data: credData }
+      const typeChanged = v.system_type !== editing.system_type
+      const payload = (credData || typeChanged)
+        ? { credential_name: v.credential_name, protocol: v.system_type, cred_data: credData! }
         : { credential_name: v.credential_name, protocol: v.system_type }
       update.mutate({ id: editing.id, input: payload }, done)
     } else {
