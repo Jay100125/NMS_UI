@@ -23,7 +23,8 @@ export function PolledDataGrid({ jobId }: { jobId: number }) {
   if (!polled.data || polled.data.length === 0) return <EmptyState message="No polled data yet." />
 
   const pageCount = Math.ceil(polled.data.length / PAGE_SIZE)
-  const rows = polled.data.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const safePage = Math.min(page, pageCount - 1)
+  const rows = polled.data.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
 
   const columns: Column<PolledData>[] = [
     { header: 'Timestamp', cell: (r) => new Date(r.polled_at).toLocaleString() },
@@ -37,9 +38,9 @@ export function PolledDataGrid({ jobId }: { jobId: number }) {
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} />
       {pageCount > 1 && (
         <div className="mt-2 flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-          <span className="text-sm text-muted-foreground">Page {page + 1} of {pageCount}</span>
-          <Button variant="outline" size="sm" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
+          <Button variant="outline" size="sm" disabled={safePage === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
+          <span className="text-sm text-muted-foreground">Page {safePage + 1} of {pageCount}</span>
+          <Button variant="outline" size="sm" disabled={safePage >= pageCount - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
         </div>
       )}
     </div>
