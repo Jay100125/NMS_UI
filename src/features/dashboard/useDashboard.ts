@@ -3,7 +3,7 @@ import { useJobs } from '@/features/provisioning/useProvisioning'
 import { getAvailability } from '@/api/provisioning'
 import type { ProvisioningJob, Availability } from '@/lib/types'
 
-export interface JobAvailability { jobId: number; availability: Availability | null }
+interface JobAvailability { jobId: number; availability: Availability | null }
 
 export function useDashboard() {
   const jobs = useJobs()
@@ -28,8 +28,6 @@ export function useDashboard() {
   const devicesDown = withAvailability.filter((a) => !a.availability!.is_up).length
 
   return {
-    jobs,
-    availabilityByJob,
     isLoading: jobs.isLoading,
     isError: jobs.isError,
     error: jobs.error,
