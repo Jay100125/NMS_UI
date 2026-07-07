@@ -114,7 +114,7 @@ export function DiscoveryFormPage() {
           <div>
             <Label id="target-type-label">Target type</Label>
             <Controller control={control} name="target_type" render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={(v) => { if (v) field.onChange(v) }}>
                 <SelectTrigger aria-labelledby="target-type-label"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="IP">IP</SelectItem>

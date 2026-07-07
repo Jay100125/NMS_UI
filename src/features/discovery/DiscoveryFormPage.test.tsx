@@ -114,3 +114,37 @@ test('prefills from the existing profile and submits an update', async () => {
     plugin_type: 'SNMP',
   }))
 })
+
+// Regression: the target_type Select's onValueChange must guard against Radix
+// firing onValueChange('') during the programmatic reset() prefill on edit,
+// the same quirk plugin_type's onTypeChange already guards against. Without
+// the guard, editing a non-IP (RANGE/CIDR) profile blanks the target type.
+test('prefills a CIDR profile without blanking the target type on edit', async () => {
+  const user = userEvent.setup()
+  server.use(
+    http.get('*/api/discovery/7', () => ok([
+      { id: 7, discovery_profile_name: 'cidr-edit', ip: '10.0.0.0/24', port: 22, plugin_type: 'LINUX', status: 'PENDING', credential_profile_ids: [1] },
+    ])),
+  )
+  let body: any = null
+  server.use(http.put('*/api/discovery/7', async ({ request }) => {
+    body = await request.json()
+    return HttpResponse.json({ 'status.code': 200, status: 'success', result: [{ id: 7 }] })
+  }))
+
+  renderAt('/discovery/7/edit')
+
+  expect(await screen.findByDisplayValue('cidr-edit')).toBeInTheDocument()
+  expect(await screen.findByDisplayValue('10.0.0.0/24')).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: /target type/i })).toHaveTextContent('CIDR')
+
+  await user.click(screen.getByRole('button', { name: /save/i }))
+
+  await waitFor(() => expect(body).toMatchObject({
+    discovery_profile_name: 'cidr-edit',
+    'ip.address': '10.0.0.0/24',
+    port: 22,
+    credential_profile_id: [1],
+    plugin_type: 'LINUX',
+  }))
+})
