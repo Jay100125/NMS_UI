@@ -8,6 +8,7 @@ import { DataTable, type Column } from '@/components/DataTable'
 import { Loading, ErrorState, EmptyState } from '@/components/states'
 import { useDiscoveryDetail, useDiscoveryResults } from './useDiscoveryDetail'
 import { useProvision } from '@/features/provisioning/useProvisioning'
+import { MessageCell } from '@/components/MessageCell'
 import type { DiscoveryResult } from '@/lib/types'
 
 export function DiscoveryResultPage() {
@@ -43,8 +44,8 @@ export function DiscoveryResultPage() {
     },
     { header: 'IP', cell: (r) => r.ip },
     { header: 'Port', cell: (r) => r.port },
-    { header: 'Result', cell: (r) => <Badge variant="secondary">{r.result}</Badge> },
-    { header: 'Message', cell: (r) => r.msg },
+    { header: 'Result', cell: (r) => <Badge variant={r.result === 'COMPLETED' ? 'success' : 'destructive'}>{r.result}</Badge> },
+    { header: 'Message', cell: (r) => <MessageCell message={r.msg} ok={r.result === 'COMPLETED'} /> },
   ]
 
   const handleProvision = () => {

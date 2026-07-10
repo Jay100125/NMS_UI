@@ -8,7 +8,7 @@ import { useInventory, type InventoryDevice } from './useInventory'
 function StatusBadge({ device }: { device: InventoryDevice }) {
   if (!device.availability) return <Badge variant="secondary">Unknown</Badge>
   return device.availability.is_up
-    ? <Badge>Up</Badge>
+    ? <Badge variant="success">Up</Badge>
     : <Badge variant="destructive">Down</Badge>
 }
 
