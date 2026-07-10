@@ -20,15 +20,15 @@ export function num(data: Record<string, unknown>, key: string): number | null {
   return typeof v === 'number' ? v : null
 }
 
-/** Time-ordered series for the given host counter keys of a category. */
-export function seriesFor(rows: PolledData[], type: string, keys: string[]): ChartSeries[] {
+/** Time-ordered series for the given host counter keys of a category, since a timestamp (ms). */
+export function seriesFor(rows: PolledData[], type: string, keys: string[], since = 0): ChartSeries[] {
   const rs = rows.filter((r) => r.instance == null && r.metric_type === type)
   return keys
     .map((k) => ({
       name: prettyKey(k),
       points: rs
         .map((r) => [Date.parse(r.polled_at), Number(r.data[k])] as [number, number])
-        .filter((p) => Number.isFinite(p[1]))
+        .filter((p) => Number.isFinite(p[1]) && p[0] >= since)
         .sort((a, b) => a[0] - b[0]),
     }))
     .filter((s) => s.points.length > 0)
