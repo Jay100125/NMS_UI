@@ -4,6 +4,9 @@ import path from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
+  // @vertx/eventbus-bridge-client and sockjs-client expect Node's `global`,
+  // which does not exist in the browser. Map it to globalThis.
+  define: { global: 'globalThis' },
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   server: {
     port: 3000,
