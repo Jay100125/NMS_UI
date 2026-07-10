@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal, Table2 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { DataTable, type Column } from '@/components/DataTable'
 import { Gauge } from '@/components/Gauge'
@@ -48,14 +49,27 @@ function OverviewTab({ rows }: { rows: PolledData[] }) {
   const proc = latestHost(rows, 'PROCESS')
   const up = num(latestHost(rows, 'UPTIME'), 'system_uptime_seconds')
 
+  const cpuSeries = seriesFor(rows, 'CPU', ['system_cpu_percent'])
+  const memSeries = seriesFor(rows, 'MEMORY', ['system_memory_used_bytes', 'system_memory_available_bytes'])
+  const netSeries = seriesFor(rows, 'NETWORK', ['system_network_in_bytes_per_sec', 'system_network_out_bytes_per_sec'])
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      <Gauge label="CPU" value={num(cpu, 'system_cpu_percent')} />
-      <Gauge label="Memory" value={num(mem, 'system_memory_used_percent')} />
-      <Gauge label="Disk" value={num(disk, 'system_disk_used_percent')} />
-      <StatTile label="Cores" value={num(cpu, 'system_cpu_cores') ?? '—'} />
-      <StatTile label="Processes" value={num(proc, 'system_process_count')?.toLocaleString() ?? '—'} />
-      <StatTile label="Uptime" value={up == null ? '—' : formatDuration(up)} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <Gauge label="CPU" value={num(cpu, 'system_cpu_percent')} />
+        <Gauge label="Memory" value={num(mem, 'system_memory_used_percent')} />
+        <Gauge label="Disk" value={num(disk, 'system_disk_used_percent')} />
+        <StatTile label="Cores" value={num(cpu, 'system_cpu_cores') ?? '—'} />
+        <StatTile label="Processes" value={num(proc, 'system_process_count')?.toLocaleString() ?? '—'} />
+        <StatTile label="Uptime" value={up == null ? '—' : formatDuration(up)} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {cpuSeries.length > 0 && <ChartCard><MetricChart title="CPU utilization" series={cpuSeries} unit="percent" /></ChartCard>}
+        {memSeries.length > 0 && <ChartCard><MetricChart title="Memory" series={memSeries} unit="bytes" /></ChartCard>}
+      </div>
+
+      {netSeries.length > 0 && <ChartCard><MetricChart title="Network throughput" series={netSeries} unit="bytes_per_sec" /></ChartCard>}
     </div>
   )
 }
@@ -159,6 +173,7 @@ export function DeviceDetailPage() {
   const device = useJobDetail(deviceId)
   const polled = usePolledData(deviceId)
   const rows = polled.data ?? []
+  const [showRaw, setShowRaw] = useState(false)
 
   return (
     <div className="p-6">
@@ -205,7 +220,13 @@ export function DeviceDetailPage() {
               )}
 
             <div className="mt-6">
-              <PolledDataGrid jobId={deviceId} />
+              <button
+                onClick={() => setShowRaw((v) => !v)}
+                className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <Table2 className="h-4 w-4" /> {showRaw ? 'Hide raw data' : 'Show raw data'}
+              </button>
+              {showRaw && <div className="mt-3"><PolledDataGrid jobId={deviceId} /></div>}
             </div>
           </>
         )}
