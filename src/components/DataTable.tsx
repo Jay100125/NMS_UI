@@ -2,7 +2,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 export interface Column<T> { header: string; cell: (row: T) => React.ReactNode }
 
-export function DataTable<T>({ columns, rows, rowKey }: { columns: Column<T>[]; rows: T[]; rowKey: (row: T) => string | number }) {
+export function DataTable<T>({ columns, rows, rowKey, onRowClick }: {
+  columns: Column<T>[]
+  rows: T[]
+  rowKey: (row: T) => string | number
+  onRowClick?: (row: T) => void
+}) {
   return (
     <Table>
       <TableHeader>
@@ -10,7 +15,13 @@ export function DataTable<T>({ columns, rows, rowKey }: { columns: Column<T>[]; 
       </TableHeader>
       <TableBody>
         {rows.map((row) => (
-          <TableRow key={rowKey(row)}>{columns.map((c, i) => <TableCell key={i}>{c.cell(row)}</TableCell>)}</TableRow>
+          <TableRow
+            key={rowKey(row)}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            className={onRowClick ? 'cursor-pointer' : undefined}
+          >
+            {columns.map((c, i) => <TableCell key={i}>{c.cell(row)}</TableCell>)}
+          </TableRow>
         ))}
       </TableBody>
     </Table>

@@ -1,5 +1,9 @@
 import Highcharts from 'highcharts'
-import HighchartsReact from 'highcharts-react-official'
+// NOTE: import the *named* export. highcharts-react-official is CommonJS, and
+// Vite's dev dep-bundling binds the default import to the whole module-exports
+// object (a plain namespace), which React rejects as an invalid element type.
+// The named `HighchartsReact` export resolves to the actual component.
+import { HighchartsReact } from 'highcharts-react-official'
 
 export function MetricChart({ title, series }: { title: string; series: { name: string; points: [number, number][] }[] }) {
   const options: Highcharts.Options = {

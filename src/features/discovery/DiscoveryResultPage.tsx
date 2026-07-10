@@ -51,7 +51,7 @@ export function DiscoveryResultPage() {
     provision.mutate({ discoveryId, selectedIps: Array.from(selectedIps) }, {
       onSuccess: () => {
         toast.success('Provisioning started')
-        navigate('/provisioning')
+        navigate('/inventory')
       },
       onError: (e) => toast.error((e as Error).message),
     })
