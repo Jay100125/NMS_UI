@@ -3,6 +3,7 @@ import { SlidersHorizontal } from 'lucide-react'
 import { Loading, ErrorState, EmptyState } from '@/components/states'
 import { useJobDetail } from '@/features/provisioning/useJobDetail'
 import { MetricCharts } from '@/features/provisioning/MetricCharts'
+import { InstanceMetrics } from '@/features/provisioning/InstanceMetrics'
 import { PolledDataGrid } from '@/features/provisioning/PolledDataGrid'
 import { AvailabilityPanel } from '@/features/provisioning/AvailabilityPanel'
 
@@ -41,6 +42,10 @@ export function DeviceDetailPage() {
 
             <div className="mb-6">
               <MetricCharts jobId={deviceId} />
+            </div>
+
+            <div className="mb-6">
+              <InstanceMetrics jobId={deviceId} />
             </div>
 
             <div>
