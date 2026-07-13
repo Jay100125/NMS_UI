@@ -16,7 +16,7 @@ function renderAt(path: string) {
         <Routes>
           <Route path="/discovery/:id/result" element={<DiscoveryResultPage />} />
           <Route path="/discovery/:id" element={<div>profile page</div>} />
-          <Route path="/provisioning" element={<div>jobs</div>} />
+          <Route path="/inventory" element={<div>inventory</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -50,7 +50,7 @@ test('only COMPLETED rows get a checkbox', async () => {
   expect(screen.getAllByRole('checkbox')).toHaveLength(1)
 })
 
-test('provisions selected COMPLETED IPs and navigates to /provisioning', async () => {
+test('provisions selected COMPLETED IPs and navigates to /inventory', async () => {
   let calledPath = ''; let body: any = null
   server.use(
     http.post('*/api/provision/3', async ({ request }) => {
@@ -63,12 +63,13 @@ test('provisions selected COMPLETED IPs and navigates to /provisioning', async (
   renderAt('/discovery/3/result')
 
   await waitFor(() => screen.getByText('10.0.0.1'))
-  await userEvent.click(screen.getByRole('checkbox'))
+  // COMPLETED rows are auto-selected — no manual check needed.
+  await waitFor(() => expect(screen.getByRole('checkbox')).toBeChecked())
   await userEvent.click(screen.getByRole('button', { name: /provision selected/i }))
 
   await waitFor(() => {
     expect(calledPath).toBe('/api/provision/3')
     expect(body).toEqual({ selected_ips: ['10.0.0.1'] })
   })
-  await waitFor(() => expect(screen.getByText('jobs')).toBeInTheDocument())
+  await waitFor(() => expect(screen.getByText('inventory')).toBeInTheDocument())
 })

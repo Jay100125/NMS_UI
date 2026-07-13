@@ -22,7 +22,7 @@ test('editing with only a password (no user) blocks submission and shows a valid
     </QueryClientProvider>,
   )
 
-  await userEvent.type(await screen.findByLabelText(/password/i), 'newSecret1!')
+  await userEvent.type(await screen.findByLabelText('Password'), 'newSecret1!')
   await userEvent.click(screen.getByRole('button', { name: /save/i }))
 
   await waitFor(() => expect(screen.getByText(/enter both user and password/i)).toBeInTheDocument())
@@ -42,7 +42,7 @@ test('editing with both user and password rotates cred_data', async () => {
   )
 
   await userEvent.type(await screen.findByLabelText(/^user$/i), 'newuser')
-  await userEvent.type(screen.getByLabelText(/password/i), 'newSecret1!')
+  await userEvent.type(screen.getByLabelText('Password'), 'newSecret1!')
   await userEvent.click(screen.getByRole('button', { name: /save/i }))
 
   await waitFor(() => expect(received).not.toBeNull())
@@ -65,8 +65,7 @@ test('editing a LINUX credential and switching type to SNMP requires a fresh com
     </QueryClientProvider>,
   )
 
-  await userEvent.click(await screen.findByRole('combobox'))
-  await userEvent.click(screen.getByRole('option', { name: 'SNMP' }))
+  await userEvent.click(await screen.findByRole('button', { name: /snmp/i }))
 
   await userEvent.click(screen.getByRole('button', { name: /save/i }))
 

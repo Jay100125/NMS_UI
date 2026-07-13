@@ -3,13 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, type Column } from '@/components/DataTable'
+import { MessageCell } from '@/components/MessageCell'
 import { EmptyState } from '@/components/states'
 import { useDiscoveryProgress } from './useDiscoveryProgress'
 import type { ProgressRow } from './progress'
 
 function StageChip({ row }: { row: ProgressRow }) {
   if (!row.stage) return <span className="text-sm text-muted-foreground">queued</span>
-  const variant = row.status === 'failed' ? 'destructive' : row.status === 'completed' ? 'default' : 'secondary'
+  const variant = row.status === 'failed' ? 'destructive' : row.status === 'completed' ? 'success' : 'secondary'
   return <Badge variant={variant}>{row.stage}</Badge>
 }
 
@@ -41,7 +42,7 @@ export function DiscoveryProgressPage() {
     { header: 'Stage', cell: (r) => <StageChip row={r} /> },
     { header: 'Progress', cell: (r) => <RowBar value={r.progress} failed={r.status === 'failed'} /> },
     { header: '%', cell: (r) => `${Math.round(r.progress)}%` },
-    { header: 'Message', cell: (r) => r.message ?? '' },
+    { header: 'Message', cell: (r) => <MessageCell message={r.message} ok={r.status === 'completed'} /> },
   ]
 
   return (

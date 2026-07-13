@@ -35,15 +35,16 @@ test('filters credentials by device type and defaults the port', async () => {
   const user = userEvent.setup()
   renderAt('/discovery/new')
 
-  // default LINUX: port 22, only the LINUX credential offered
+  // default LINUX: port 22, only the LINUX credential offered in the dropdown
   expect(await screen.findByDisplayValue('22')).toBeInTheDocument()
+  await user.click(await screen.findByRole('button', { name: /select credentials/i }))
   expect(await screen.findByText('linux-cred')).toBeInTheDocument()
   expect(screen.queryByText('snmp-cred')).not.toBeInTheDocument()
 
-  await user.click(screen.getByRole('combobox', { name: /device type/i }))
-  await user.click(screen.getByRole('option', { name: 'SNMP' }))
+  await user.click(screen.getByRole('button', { name: /snmp/i }))
 
   expect(await screen.findByDisplayValue('161')).toBeInTheDocument()
+  await user.click(await screen.findByRole('button', { name: /select credentials/i }))
   expect(await screen.findByText('snmp-cred')).toBeInTheDocument()
   expect(screen.queryByText('linux-cred')).not.toBeInTheDocument()
 })
@@ -51,11 +52,10 @@ test('filters credentials by device type and defaults the port', async () => {
 test('rejects an invalid CIDR before submitting', async () => {
   const user = userEvent.setup()
   renderAt('/discovery/new')
-  await user.click(screen.getByRole('combobox', { name: /target type/i }))
-  await user.click(screen.getByRole('option', { name: 'CIDR' }))
-  await user.type(screen.getByLabelText('Target'), '10.0.0.0/40')
+  await user.click(screen.getByRole('button', { name: 'CIDR' }))
+  await user.type(screen.getByLabelText('Address'), '10.0.0.0/40')
   await user.type(screen.getByLabelText('Name'), 'bad')
-  await user.click(screen.getByRole('button', { name: /save/i }))
+  await user.click(screen.getByRole('button', { name: /create discovery/i }))
   expect(await screen.findByText(/mask must be 0-32/i)).toBeInTheDocument()
 })
 
@@ -71,10 +71,10 @@ test('creates a discovery with the dotted ip.address wire shape', async () => {
   renderAt('/discovery/new')
 
   await user.type(screen.getByLabelText('Name'), 'lab')
-  await user.type(screen.getByLabelText('Target'), '10.0.0.1')
-  await waitFor(() => screen.getByText('linux-cred'))
-  await user.click(screen.getByLabelText('linux-cred'))
-  await user.click(screen.getByRole('button', { name: /save/i }))
+  await user.type(screen.getByLabelText('Address'), '10.0.0.1')
+  await user.click(await screen.findByRole('button', { name: /select credentials/i }))
+  await user.click(await screen.findByRole('button', { name: 'linux-cred' }))
+  await user.click(screen.getByRole('button', { name: /create discovery/i }))
 
   await waitFor(() => expect(body).toMatchObject({
     discovery_profile_name: 'lab',
@@ -136,7 +136,7 @@ test('prefills a CIDR profile without blanking the target type on edit', async (
 
   expect(await screen.findByDisplayValue('cidr-edit')).toBeInTheDocument()
   expect(await screen.findByDisplayValue('10.0.0.0/24')).toBeInTheDocument()
-  expect(screen.getByRole('combobox', { name: /target type/i })).toHaveTextContent('CIDR')
+  expect(screen.getByRole('button', { name: 'CIDR' })).toHaveAttribute('aria-pressed', 'true')
 
   await user.click(screen.getByRole('button', { name: /save/i }))
 

@@ -3,9 +3,16 @@ import { useJobs } from '@/features/provisioning/useProvisioning'
 import { getAvailability } from '@/api/provisioning'
 import type { ProvisioningJob, Availability } from '@/lib/types'
 
-interface JobAvailability { jobId: number; availability: Availability | null }
+export interface InventoryDevice extends ProvisioningJob {
+  availability: Availability | null
+}
 
-export function useDashboard() {
+/**
+ * The set of provisioned devices, each enriched with its latest availability
+ * (up/down + uptime %). Availability is polled per-device on a 10s interval so
+ * the Inventory list reflects live state.
+ */
+export function useInventory() {
   const jobs = useJobs()
   const jobList: ProvisioningJob[] = jobs.data ?? []
 
@@ -17,23 +24,16 @@ export function useDashboard() {
     })),
   })
 
-  const availabilityByJob: JobAvailability[] = jobList.map((job, i) => ({
-    jobId: job.id,
+  const devices: InventoryDevice[] = jobList.map((job, i) => ({
+    ...job,
     availability: availabilityQueries[i]?.data ?? null,
   }))
 
-  const totalJobs = jobList.length
-  const withAvailability = availabilityByJob.filter((a) => a.availability !== null)
-  const devicesUp = withAvailability.filter((a) => a.availability!.is_up).length
-  const devicesDown = withAvailability.filter((a) => !a.availability!.is_up).length
-
   return {
+    devices,
     isLoading: jobs.isLoading,
     isError: jobs.isError,
     error: jobs.error,
     refetch: jobs.refetch,
-    totalJobs,
-    devicesUp,
-    devicesDown,
   }
 }

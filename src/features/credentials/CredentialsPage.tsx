@@ -18,7 +18,7 @@ export function CredentialsPage() {
     { header: 'Name', cell: (r) => r.credential_name },
     { header: 'Type', cell: (r) => <Badge variant="secondary">{r.system_type}</Badge> },
     { header: '', cell: (r) => (
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={() => { setEditing(r); setOpen(true) }}>Edit</Button>
         <Button variant="ghost" size="sm" className="text-red-600"
           onClick={() => { if (confirm(`Delete ${r.credential_name}?`)) del.mutate(r.id, { onError: (e) => toast.error((e as Error).message) }) }}>Delete</Button>

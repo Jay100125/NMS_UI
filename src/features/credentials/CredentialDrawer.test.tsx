@@ -19,8 +19,8 @@ test('creates a credential with encrypted-at-rest payload shape', async () => {
   )
   await userEvent.type(screen.getByLabelText(/name/i), 'linux-root')
   await userEvent.type(screen.getByLabelText(/^user$/i), 'root')
-  await userEvent.type(screen.getByLabelText(/password/i), 'hunter2!')
-  await userEvent.click(screen.getByRole('button', { name: /save/i }))
+  await userEvent.type(screen.getByLabelText('Password'), 'hunter2!')
+  await userEvent.click(screen.getByRole('button', { name: /create credential/i }))
   await waitFor(() => expect(received).toMatchObject({
     credential_name: 'linux-root',
     protocol: 'LINUX',
@@ -40,13 +40,12 @@ test('shows a community field for SNMP and submits {community}', async () => {
     </QueryClientProvider>,
   )
 
-  await userEvent.click(screen.getByRole('combobox'))
-  await userEvent.click(screen.getByRole('option', { name: 'SNMP' }))
+  await userEvent.click(screen.getByRole('button', { name: /snmp/i }))
 
   expect(screen.queryByLabelText(/^user$/i)).not.toBeInTheDocument()
   await userEvent.type(screen.getByLabelText(/community/i), 'public')
   await userEvent.type(screen.getByLabelText(/name/i), 'snmp-cred')
-  await userEvent.click(screen.getByRole('button', { name: /save/i }))
+  await userEvent.click(screen.getByRole('button', { name: /create credential/i }))
 
   await waitFor(() => expect(received).toMatchObject({
     credential_name: 'snmp-cred',

@@ -20,5 +20,5 @@ export interface DiscoveryResult { id: number; discovery_id: number; ip: string;
 export interface ProvisioningJob { id: number; ip: string; port: number; credential_profile_id?: number; plugin_type?: SystemType; credential_name?: string; system_type?: SystemType }
 export interface JobMetric { metric_name: string; polling_interval: number; is_enabled: boolean }
 export interface ProvisioningJobDetail { id: number; ip: string; port: number; metrics: JobMetric[] }
-export interface PolledData { id: number; job_id: number; metric_type: string; data: Record<string, unknown>; polled_at: string }
+export interface PolledData { id: number; job_id: number; metric_type: string; instance: string | null; data: Record<string, unknown>; polled_at: string }
 export interface Availability { provisioning_job_id: number; is_up: boolean; last_change: string; up_samples: number; total_samples: number; availability_pct: number }

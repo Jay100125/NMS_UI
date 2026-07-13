@@ -29,7 +29,7 @@ export function AvailabilityPanel({ jobId }: { jobId: number }) {
     <div className="rounded-md border p-4">
       <h2 className="mb-3 text-lg font-semibold">Availability</h2>
       <div className="flex items-center gap-3">
-        <Badge variant={is_up ? 'default' : 'destructive'}>{is_up ? 'Up' : 'Down'}</Badge>
+        <Badge variant={is_up ? 'success' : 'destructive'}>{is_up ? 'Up' : 'Down'}</Badge>
         <span className="text-sm font-medium">{formatPct(availability_pct)}</span>
         <span className="text-xs text-muted-foreground">{up_samples}/{total_samples} samples up</span>
       </div>
