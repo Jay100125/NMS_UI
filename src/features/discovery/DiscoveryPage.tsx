@@ -13,14 +13,17 @@ export function DiscoveryPage() {
   const del = useDeleteDiscovery()
 
   const columns: Column<Discovery>[] = [
-    { header: 'Name', cell: (r) => r.discovery_profile_name },
+    { header: 'Name', cell: (r) => (
+      <Link to={`/discovery/${r.id}/result`} className="font-medium text-foreground hover:underline">
+        {r.discovery_profile_name}
+      </Link>
+    ) },
     { header: 'IP', cell: (r) => r.ip },
     { header: 'Port', cell: (r) => r.port },
     { header: 'Type', cell: (r) => <Badge variant="outline">{r.plugin_type}</Badge> },
     { header: 'Status', cell: (r) => <Badge variant="secondary">{r.status}</Badge> },
     { header: '', cell: (r) => (
-      <div className="flex gap-2">
-        <Link to={`/discovery/${r.id}`} className="text-sm underline">Open</Link>
+      <div className="flex justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={() => navigate(`/discovery/${r.id}/edit`)}>Edit</Button>
         <Button variant="ghost" size="sm" className="text-red-600"
           onClick={() => { if (confirm(`Delete ${r.discovery_profile_name}?`)) del.mutate(r.id, { onError: (e) => toast.error((e as Error).message) }) }}>Delete</Button>

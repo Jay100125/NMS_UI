@@ -63,7 +63,8 @@ test('provisions selected COMPLETED IPs and navigates to /inventory', async () =
   renderAt('/discovery/3/result')
 
   await waitFor(() => screen.getByText('10.0.0.1'))
-  await userEvent.click(screen.getByRole('checkbox'))
+  // COMPLETED rows are auto-selected — no manual check needed.
+  await waitFor(() => expect(screen.getByRole('checkbox')).toBeChecked())
   await userEvent.click(screen.getByRole('button', { name: /provision selected/i }))
 
   await waitFor(() => {

@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { KeyRound, Radar, SlidersHorizontal, Server, type LucideIcon } from 'lucide-react'
+import { KeyRound, Radar, SlidersHorizontal, Server, ChevronDown, Settings, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuthStore } from '@/stores/auth'
@@ -32,11 +33,16 @@ function NavItemLink({ to, label, icon: Icon }: NavItem) {
   )
 }
 
+const settingsPaths = settingsLinks.map((l) => l.to)
+
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { username, logout } = useAuthStore()
   const toggleDark = () => document.documentElement.classList.toggle('dark')
+
+  const onSettingsRoute = settingsPaths.some((p) => location.pathname.startsWith(p))
+  const [settingsOpen, setSettingsOpen] = useState(onSettingsRoute)
 
   return (
     <div className="flex h-screen">
@@ -48,13 +54,26 @@ export function AppLayout() {
 
         <nav className="flex-1 space-y-6 overflow-y-auto p-3">
           <div className="space-y-1">
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Settings</p>
-            {settingsLinks.map((l) => <NavItemLink key={l.to} {...l} />)}
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monitoring</p>
+            {monitoringLinks.map((l) => <NavItemLink key={l.to} {...l} />)}
           </div>
 
           <div className="space-y-1">
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monitoring</p>
-            {monitoringLinks.map((l) => <NavItemLink key={l.to} {...l} />)}
+            <button
+              type="button"
+              onClick={() => setSettingsOpen((o) => !o)}
+              aria-expanded={settingsOpen}
+              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              <span className="font-medium">Settings</span>
+              <ChevronDown className={`ml-auto h-4 w-4 shrink-0 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {settingsOpen && (
+              <div className="space-y-1 pl-3">
+                {settingsLinks.map((l) => <NavItemLink key={l.to} {...l} />)}
+              </div>
+            )}
           </div>
         </nav>
       </aside>

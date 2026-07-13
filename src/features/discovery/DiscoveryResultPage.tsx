@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,29 @@ export function DiscoveryResultPage() {
   const results = useDiscoveryResults(discoveryId, detail.data?.status === 'RUNNING')
   const provision = useProvision()
   const [selectedIps, setSelectedIps] = useState<Set<string>>(new Set())
+
+  // Auto-select each newly-seen COMPLETED IP (these are the ones worth
+  // provisioning). Tracked in a ref so a user un-checking one isn't undone by
+  // the next poll — we only add IPs the first time they appear as COMPLETED.
+  const autoSelected = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    const rows = results.data
+    if (!rows) return
+    const fresh = rows.filter((r) => r.result === 'COMPLETED' && !autoSelected.current.has(r.ip))
+    if (fresh.length === 0) return
+    fresh.forEach((r) => autoSelected.current.add(r.ip))
+    setSelectedIps((prev) => {
+      const next = new Set(prev)
+      fresh.forEach((r) => next.add(r.ip))
+      return next
+    })
+  }, [results.data])
+
+  // Successful discoveries float to the top; failures sink below.
+  const sortedResults = useMemo(() => {
+    const rows = results.data ?? []
+    return [...rows].sort((a, b) => (a.result === 'COMPLETED' ? 0 : 1) - (b.result === 'COMPLETED' ? 0 : 1))
+  }, [results.data])
 
   const toggleIp = (ip: string, checked: boolean) => {
     setSelectedIps((prev) => {
@@ -76,7 +99,7 @@ export function DiscoveryResultPage() {
               : !results.data || results.data.length === 0 ? <EmptyState message="No results yet." />
               : (
                 <>
-                  <DataTable columns={columns} rows={results.data} rowKey={(r) => r.id} />
+                  <DataTable columns={columns} rows={sortedResults} rowKey={(r) => r.id} />
                   <div className="mt-4">
                     <Button disabled={selectedIps.size === 0} onClick={handleProvision}>
                       Provision selected
